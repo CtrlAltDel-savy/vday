@@ -84,6 +84,40 @@
   justify-content: center;
 }
 
+/* Confetti (when user clicks Yes) */
+.valentine__confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.valentine__confetti-piece {
+  position: absolute;
+  top: -20px;
+  animation: confetti-fall linear forwards;
+}
+
+.valentine__confetti-piece--rect {
+  border-radius: 1px;
+}
+
+.valentine__confetti-piece--circle {
+  border-radius: 50%;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.6;
+  }
+}
+
 .valentine__image {
   width: 550px;
   height: 360px;
@@ -97,6 +131,7 @@
 .valentine__image--happy {
   border-color: #ffb6c1;
   box-shadow: 0 0 50px rgba(255, 182, 193, 0.5);
+  height: 500px;
 }
 
 .valentine__question {

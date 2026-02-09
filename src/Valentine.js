@@ -1,15 +1,29 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import './Valentine.css';
+
+const CONFETTI_COLORS = ['#e8b4b8', '#ffb6c1', '#ff69b4', '#ff1493', '#ff85a1', '#fff0f5', '#ffd700', '#ffa07a'];
+const CONFETTI_COUNT = 1000;
 
 // Replace with your own image URLs or add images to public folder
 const HARRY_IMAGES = [
-  'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=400&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=400&fit=crop',
+  'https://image2url.com/r2/default/images/1770604709053-c4ebd0a9-01af-40ca-b1ff-3664dacfe88a.jpg',
+  'https://image2url.com/r2/default/images/1770605030186-0b379cbd-3c79-4513-9449-790e1cb4d925.png',
+  'https://image2url.com/r2/default/images/1770605887579-f8eb9a9f-5c4c-49c7-b084-d9b638981913.png',
+  'https://image2url.com/r2/default/images/1770605914243-3cb5b547-1e8e-4242-84df-df56bb74d4c0.png',
+  'https://image2url.com/r2/default/images/1770605935942-29fd0750-2397-42eb-9520-1531dfb78695.png',
+  'https://image2url.com/r2/default/images/1770606272567-b0b4f0ea-31e6-48bd-8222-72b0481699eb.png',
+  'https://image2url.com/r2/default/images/1770606291821-39a7f064-1d6d-4c49-b504-e8dd4fad11c2.png',
 ];
-const HAPPY_IMAGE = 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop';
+
+// const HARRY_IMAGES = [
+//   'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=400&h=400&fit=crop',
+//   'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop',
+//   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=400&fit=crop',
+//   'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop',
+//   'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=400&fit=crop',
+// ];
+const HAPPY_IMAGE = `${process.env.PUBLIC_URL}/photo_nice.jpeg`;
+// const HAPPY_IMAGE = 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop';
 
 function Valentine() {
   const [saidYes, setSaidYes] = useState(false);
@@ -43,10 +57,39 @@ function Valentine() {
     </div>
   );
 
+  const confettiPieces = useMemo(() => {
+    if (!saidYes) return [];
+    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      delay: Math.random() * 1.2,
+      duration: 3 + Math.random() * 2,
+      size: 6 + Math.random() * 8,
+      isRect: Math.random() > 0.4,
+    }));
+  }, [saidYes]);
+
   if (saidYes) {
     return (
       <div className="valentine valentine--result">
         {hearts}
+        <div className="valentine__confetti" aria-hidden>
+          {confettiPieces.map((p) => (
+            <span
+              key={p.id}
+              className={`valentine__confetti-piece ${p.isRect ? 'valentine__confetti-piece--rect' : 'valentine__confetti-piece--circle'}`}
+              style={{
+                left: `${p.left}%`,
+                backgroundColor: p.color,
+                animationDelay: `${p.delay}s`,
+                animationDuration: `${p.duration}s`,
+                width: p.size,
+                height: p.isRect ? p.size * 1.4 : p.size,
+              }}
+            />
+          ))}
+        </div>
         <img
           src={HAPPY_IMAGE}
           className="valentine__image valentine__image--happy"
