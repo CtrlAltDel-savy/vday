@@ -4,6 +4,9 @@ import './Valentine.css';
 const CONFETTI_COLORS = ['#e8b4b8', '#ffb6c1', '#ff69b4', '#ff1493', '#ff85a1', '#fff0f5', '#ffd700', '#ffa07a'];
 const CONFETTI_COUNT = 1000;
 
+// 4-digit PIN (DOB as MMDD or DDMM – e.g. 0315 for March 15)
+const CORRECT_PIN = '2122';
+
 // Replace with your own image URLs or add images to public folder
 const HARRY_IMAGES = [
   'https://image2url.com/r2/default/images/1770604709053-c4ebd0a9-01af-40ca-b1ff-3664dacfe88a.jpg',
@@ -26,9 +29,36 @@ const HAPPY_IMAGE = `${process.env.PUBLIC_URL}/photo_nice.jpeg`;
 // const HAPPY_IMAGE = 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop';
 
 function Valentine() {
+  const [pinUnlocked, setPinUnlocked] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
   const [saidYes, setSaidYes] = useState(false);
   const [noButtonPosition, setNoButtonPosition] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+
+  const handlePinSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      setPinError('');
+      if (pinInput.length !== 4) {
+        setPinError('Please enter 4 digits');
+        return;
+      }
+      if (pinInput === CORRECT_PIN) {
+        setPinUnlocked(true);
+        setPinInput('');
+      } else {
+        setPinError('Wrong PIN. Try again!');
+      }
+    },
+    [pinInput]
+  );
+
+  const handlePinChange = useCallback((e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    setPinInput(value);
+    setPinError('');
+  }, []);
 
   const handleYes = useCallback(() => {
     setSaidYes(true);
@@ -70,6 +100,36 @@ function Valentine() {
     }));
   }, [saidYes]);
 
+  /* PIN screen – before question */
+  if (!pinUnlocked) {
+    return (
+      <div className="valentine valentine--pin">
+        {hearts}
+        <div className="valentine__pin-wrap">
+          <p className="valentine__pin-label">Enter the 4-digit PIN (Clue: DOB)</p>
+          <form className="valentine__pin-form" onSubmit={handlePinSubmit}>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              className="valentine__pin-input"
+              placeholder="••••"
+              value={pinInput}
+              onChange={handlePinChange}
+              autoComplete="off"
+              aria-label="4-digit PIN"
+            />
+            <button type="submit" className="valentine__btn valentine__btn--yes valentine__pin-submit">
+              Submit
+            </button>
+          </form>
+          {pinError && <p className="valentine__pin-error">{pinError}</p>}
+        </div>
+      </div>
+    );
+  }
+
   if (saidYes) {
     return (
       <div className="valentine valentine--result">
@@ -100,6 +160,7 @@ function Valentine() {
     );
   }
 
+  /* Main question screen */
   return (
     <div className="valentine">
       {hearts}

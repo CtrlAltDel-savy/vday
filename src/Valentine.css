@@ -38,9 +38,66 @@
 
 .valentine > img,
 .valentine > p,
-.valentine > .valentine__buttons {
+.valentine > .valentine__buttons,
+.valentine > .valentine__pin-wrap {
   position: relative;
   z-index: 1;
+}
+
+/* PIN screen */
+.valentine__pin-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.valentine__pin-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.valentine__pin-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.valentine__pin-input {
+  width: 140px;
+  padding: 0.75rem 1rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  border: 2px solid #e8b4b8;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.valentine__pin-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.valentine__pin-input:focus {
+  border-color: #ffb6c1;
+  box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.3);
+}
+
+.valentine__pin-submit {
+  min-width: 120px;
+}
+
+.valentine__pin-error {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #ff85a1;
+  font-weight: 500;
 }
 
 /* Positions and sizes */
