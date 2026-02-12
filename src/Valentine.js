@@ -156,6 +156,7 @@ function Valentine() {
           alt="Happy Valentine"
         />
         <p className="valentine__thanks">Yaay! Thanks for being my Valentine</p>
+        <p className="valentine__thanks">💖💖💖 Happy Valentine's Day 💖💖💖</p>
       </div>
     );
   }
