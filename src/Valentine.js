@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import './Valentine.css';
 
 const CONFETTI_COLORS = ['#e8b4b8', '#ffb6c1', '#ff69b4', '#ff1493', '#ff85a1', '#fff0f5', '#ffd700', '#ffa07a'];
@@ -35,6 +35,13 @@ function Valentine() {
   const [saidYes, setSaidYes] = useState(false);
   const [noButtonPosition, setNoButtonPosition] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [yesClickCount, setYesClickCount] = useState(0);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [heartTrail, setHeartTrail] = useState([]);
+  const [floatingEmojis, setFloatingEmojis] = useState([]);
+  const questionText = 'Hi Saarini, will you be my Valentine?';
+  const containerRef = useRef(null);
 
   const handlePinSubmit = useCallback(
     (e) => {
@@ -60,9 +67,77 @@ function Valentine() {
     setPinError('');
   }, []);
 
-  const handleYes = useCallback(() => {
-    setSaidYes(true);
+  // Typing animation effect
+  useEffect(() => {
+    if (!pinUnlocked || saidYes) return;
+    setTypedText('');
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex < questionText.length) {
+        setTypedText(questionText.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 50);
+    return () => clearInterval(typingInterval);
+  }, [pinUnlocked, saidYes]);
+
+  // Heart trail cursor effect
+  useEffect(() => {
+    if (!pinUnlocked || saidYes) return;
+    const handleMouseMove = (e) => {
+      setCursorPosition({ x: e.clientX, y: e.clientY });
+      if (Math.random() > 0.7) {
+        setHeartTrail((prev) => [
+          ...prev.slice(-10),
+          {
+            id: Date.now(),
+            x: e.clientX,
+            y: e.clientY,
+          },
+        ]);
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [pinUnlocked, saidYes]);
+
+  // Clean up heart trail
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeartTrail((prev) => prev.filter((h) => Date.now() - h.id < 1000));
+    }, 100);
+    return () => clearInterval(interval);
   }, []);
+
+  // Floating emojis
+  useEffect(() => {
+    if (!pinUnlocked || saidYes) return;
+    const emojis = ['❤️', '💕', '💖', '💗', '💝'];
+    const interval = setInterval(() => {
+      if (Math.random() > 0.8) {
+        setFloatingEmojis((prev) => [
+          ...prev.slice(-5),
+          {
+            id: Date.now(),
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            left: Math.random() * 100,
+            delay: Math.random() * 2,
+          },
+        ]);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [pinUnlocked, saidYes]);
+
+  const handleYes = useCallback(() => {
+    setYesClickCount((prev) => prev + 1);
+    if (yesClickCount >= 1) {
+      setSaidYes(true);
+      setYesClickCount(0);
+    }
+  }, [yesClickCount]);
 
   const handleNo = useCallback(() => {
     const padding = 80;
@@ -100,13 +175,37 @@ function Valentine() {
     }));
   }, [saidYes]);
 
+  // Balloons for celebration
+  const balloons = useMemo(() => {
+    if (!saidYes) return [];
+    return Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      delay: Math.random() * 2,
+      duration: 4 + Math.random() * 2,
+    }));
+  }, [saidYes]);
+
+  // Heart rain for celebration
+  const heartRain = useMemo(() => {
+    if (!saidYes) return [];
+    return Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 3 + Math.random() * 2,
+    }));
+  }, [saidYes]);
+
   /* PIN screen – before question */
   if (!pinUnlocked) {
     return (
       <div className="valentine valentine--pin">
         {hearts}
         <div className="valentine__pin-wrap">
-          <p className="valentine__pin-label">Enter the 4-digit PIN (Clue: DOB)</p>
+          <p className="valentine__pin-label">Enter the 4-digit PIN</p>
+          <p className="valentine__pin-hint">💕 Hint: It's a special date 💕</p>
           <form className="valentine__pin-form" onSubmit={handlePinSubmit}>
             <input
               type="password"
@@ -150,6 +249,35 @@ function Valentine() {
             />
           ))}
         </div>
+        <div className="valentine__balloons" aria-hidden>
+          {balloons.map((b) => (
+            <span
+              key={b.id}
+              className="valentine__balloon"
+              style={{
+                left: `${b.left}%`,
+                backgroundColor: b.color,
+                animationDelay: `${b.delay}s`,
+                animationDuration: `${b.duration}s`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="valentine__heart-rain" aria-hidden>
+          {heartRain.map((h) => (
+            <span
+              key={h.id}
+              className="valentine__heart-rain-item"
+              style={{
+                left: `${h.left}%`,
+                animationDelay: `${h.delay}s`,
+                animationDuration: `${h.duration}s`,
+              }}
+            >
+              ❤️
+            </span>
+          ))}
+        </div>
         <img
           src={HAPPY_IMAGE}
           className="valentine__image valentine__image--happy"
@@ -163,21 +291,55 @@ function Valentine() {
 
   /* Main question screen */
   return (
-    <div className="valentine">
+    <div className="valentine" ref={containerRef}>
       {hearts}
+      <div className="valentine__heart-trail" aria-hidden>
+        {heartTrail.map((h) => (
+          <span
+            key={h.id}
+            className="valentine__heart-trail-item"
+            style={{
+              left: h.x,
+              top: h.y,
+            }}
+          >
+            ❤️
+          </span>
+        ))}
+      </div>
+      <div className="valentine__floating-emojis" aria-hidden>
+        {floatingEmojis.map((e) => (
+          <span
+            key={e.id}
+            className="valentine__floating-emoji"
+            style={{
+              left: `${e.left}%`,
+              animationDelay: `${e.delay}s`,
+            }}
+          >
+            {e.emoji}
+          </span>
+        ))}
+      </div>
+      <div className="valentine__personal-message">
+        <p className="valentine__message-text">💕 You mean the world to me 💕</p>
+      </div>
       <img
         src={HARRY_IMAGES[imageIndex]}
         className="valentine__image"
         alt="Cute Harry Potter"
       />
-      <p className="valentine__question">Hi Saarini, will you be my Valentine?</p>
+      <p className="valentine__question">
+        {typedText}
+        <span className="valentine__cursor">|</span>
+      </p>
       <div className="valentine__buttons">
         <button
           type="button"
           className="valentine__btn valentine__btn--yes"
           onClick={handleYes}
         >
-          Yes
+          {yesClickCount === 0 ? 'Yes' : 'Click again to confirm! 💕'}
         </button>
         <button
           type="button"
