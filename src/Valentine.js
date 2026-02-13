@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './Valentine.css';
 
 const CONFETTI_COLORS = ['#e8b4b8', '#ffb6c1', '#ff69b4', '#ff1493', '#ff85a1', '#fff0f5', '#ffd700', '#ffa07a'];
@@ -35,6 +35,10 @@ function Valentine() {
   const [saidYes, setSaidYes] = useState(false);
   const [noButtonPosition, setNoButtonPosition] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [yesClickCount, setYesClickCount] = useState(0);
+
+  const questionText = 'Hi Saarini baby, will you be my Valentine?';
 
   const handlePinSubmit = useCallback(
     (e) => {
@@ -61,8 +65,12 @@ function Valentine() {
   }, []);
 
   const handleYes = useCallback(() => {
-    setSaidYes(true);
-  }, []);
+    setYesClickCount((prev) => prev + 1);
+    if (yesClickCount >= 1) {
+      setSaidYes(true);
+      setYesClickCount(0);
+    }
+  }, [yesClickCount]);
 
   const handleNo = useCallback(() => {
     const padding = 80;
@@ -71,6 +79,22 @@ function Valentine() {
     setNoButtonPosition({ x, y });
     setImageIndex((prev) => (prev + 1) % HARRY_IMAGES.length);
   }, []);
+
+  // Typing animation effect
+  useEffect(() => {
+    if (!pinUnlocked || saidYes) return;
+    setTypedText('');
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex < questionText.length) {
+        setTypedText(questionText.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 125);
+    return () => clearInterval(typingInterval);
+  }, [pinUnlocked, saidYes]);
 
   const heartPath =
     'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
@@ -106,7 +130,8 @@ function Valentine() {
       <div className="valentine valentine--pin">
         {hearts}
         <div className="valentine__pin-wrap">
-          <p className="valentine__pin-label">Enter the 4-digit PIN (Clue: DOB)</p>
+          <p className="valentine__pin-label">Enter the 4-digit PIN</p>
+          <p className="valentine__pin-hint">💕 Hint: It's special dates 💕</p>
           <form className="valentine__pin-form" onSubmit={handlePinSubmit}>
             <input
               type="password"
@@ -170,14 +195,17 @@ function Valentine() {
         className="valentine__image"
         alt="Cute Harry Potter"
       />
-      <p className="valentine__question">Hi Saarini, will you be my Valentine?</p>
+      <p className="valentine__question">
+        {typedText}
+        <span className="valentine__cursor">|</span>
+      </p>
       <div className="valentine__buttons">
         <button
           type="button"
           className="valentine__btn valentine__btn--yes"
           onClick={handleYes}
         >
-          Yes
+          {yesClickCount === 0 ? 'Yes' : '💕 Click again to confirm! 💕'}
         </button>
         <button
           type="button"
